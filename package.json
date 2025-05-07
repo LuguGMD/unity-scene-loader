@@ -1,0 +1,19 @@
+{
+    "name": "com.lugu.sceneloader",
+    "version": "1.0.0",
+    "displayName": "Scene Loader",
+    "description": "This is an package that allows you to easily navigates between selected scenes",
+    "unity": "6000.0",
+    "keywords": [
+      "scene",
+      "navigation",
+      "easy"
+    ],
+    "author": {
+      "name": "Lugu",
+      "email": "lugu.bhz@gmail.com",
+      "url": "https://lugu-90545d.webflow.io"
+    }
+  }
+  
+  
