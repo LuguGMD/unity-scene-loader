@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -10,10 +11,10 @@ namespace lugu.SceneLoader
 {
     public class SceneLoader : EditorWindow
     {
-        public List<SceneAsset> scenes = new List<SceneAsset>();
+        public SceneAsset[] scenes;
         public SceneAsset sceneSelected;
 
-        public List<string> scenePaths;
+        public string[] scenePaths;
 
         private SerializedObject so;
         private SerializedProperty propScenes;
@@ -21,7 +22,7 @@ namespace lugu.SceneLoader
         private SerializedProperty propScenePaths;
 
 
-        [MenuItem("Tools/Scene Loader")]
+        [MenuItem("Tools/Lugu/Scene Loader")]
         public static void OpenWindow()
         { 
             EditorWindow.GetWindow<SceneLoader>();
@@ -34,12 +35,12 @@ namespace lugu.SceneLoader
             propSceneSelected = so.FindProperty("sceneSelected");
             propScenePaths = so.FindProperty("scenePaths");
 
-            //Load();
+            Load();
         }
 
         private void OnDisable()
         {
-            //Save();
+            Save();
         }
 
         private void OnGUI()
@@ -54,34 +55,44 @@ namespace lugu.SceneLoader
 
             so.ApplyModifiedProperties();
 
-            so.Update();
+            if(sceneSelected != null)
             if(scenes.Contains(sceneSelected))
             {
                 if (GUILayout.Button("Remove"))
                 {
-                    int index = scenes.FindIndex(0, scenes.Count, (SceneAsset match) => { return match == sceneSelected; } );
-                    scenes.RemoveAt(index);
-                    //propScenePaths.DeleteArrayElementAtIndex(index);
+                    so.Update();
+                    int index = Array.FindIndex(scenes, 0, (SceneAsset match) => { return match == sceneSelected; } );
+                    propScenes.DeleteArrayElementAtIndex(index);
+                    propScenePaths.DeleteArrayElementAtIndex(index);
+                    so.ApplyModifiedProperties();
                 }
             }
             else if(sceneSelected != null) 
             {
                 if (GUILayout.Button("Add"))
                 {
-                    scenes.Add(sceneSelected);
+                    so.Update();
+                    propScenes.InsertArrayElementAtIndex(propScenes.arraySize);
+                    so.ApplyModifiedProperties();
+                    so.Update();
+                    SerializedProperty pScene = propScenes.GetArrayElementAtIndex(propScenes.arraySize-1);
+                    pScene.objectReferenceValue = propSceneSelected.objectReferenceValue;
+                    so.ApplyModifiedProperties();
 
-                    /*propScenePaths.InsertArrayElementAtIndex(scenes.Count - 1);
-                    SerializedProperty path = propScenePaths.GetArrayElementAtIndex(scenes.Count - 1);
-                    path.stringValue = AssetDatabase.GetAssetPath(sceneSelected);*/
-
+                    so.Update();
+                    propScenePaths.InsertArrayElementAtIndex(propScenePaths.arraySize);
+                    SerializedProperty path = propScenePaths.GetArrayElementAtIndex(propScenePaths.arraySize - 1);
+                    path.stringValue = AssetDatabase.GetAssetPath(sceneSelected);
+                    so.ApplyModifiedProperties();
                 }
             }
-            so.ApplyModifiedProperties();
+           
             
 
             EditorGUILayout.EndVertical();
 
-            for (int i = 0; i < scenes.Count; i++)
+            if(scenes != null)
+            for (int i = 0; i < scenes.Length; i++)
             {
                 SceneAsset currentScene = scenes[i];
 
@@ -95,7 +106,7 @@ namespace lugu.SceneLoader
                     
                     if (GUILayout.Button("↓", GUILayout.Width(20)))
                     {
-                        if (i != scenes.Count - 1)
+                        if (i != scenes.Length - 1)
                             propScenes.MoveArrayElement(i, i+1);
                     }
 
@@ -120,7 +131,7 @@ namespace lugu.SceneLoader
 
         public int SearchScene(string sceneName)
         { 
-            for (int i = 0;i < scenes.Count;i++)
+            for (int i = 0;i < scenes.Length;i++)
             {
                 if(scenes[i].name == sceneName)
                 {
@@ -141,16 +152,29 @@ namespace lugu.SceneLoader
         public void Load()
         {
             string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
-            Debug.Log(path);
+
             if (File.Exists(path))
             {
-                SceneLoaderData data = JsonUtility.FromJson(path, typeof(SceneLoaderData)) as SceneLoaderData;
+                string json = File.ReadAllText(path);
+                SceneLoaderData data = JsonUtility.FromJson<SceneLoaderData>(json);
 
-                for (int i = 0; i < data.scenePaths.Length; i++)
-                {
-                    SceneAsset sceneToAdd = AssetDatabase.LoadAssetAtPath(data.scenePaths[i], typeof(SceneAsset)) as SceneAsset;
-                    scenes.Add(sceneToAdd);
-                }
+                if(data.scenePaths != null)
+                    for (int i = 0; i < data.scenePaths.Length; i++)
+                    {
+                        SceneAsset sceneToAdd = AssetDatabase.LoadAssetAtPath(data.scenePaths[i], typeof(SceneAsset)) as SceneAsset;
+                        so.Update();
+                        propScenes.InsertArrayElementAtIndex(i);
+                        SerializedProperty pScene = propScenes.GetArrayElementAtIndex(i);
+                        pScene.objectReferenceValue = sceneToAdd;
+
+                        so.ApplyModifiedProperties();
+
+                        so.Update();
+                        propScenePaths.InsertArrayElementAtIndex(i);
+                        SerializedProperty propPath = propScenePaths.GetArrayElementAtIndex(i);
+                        propPath.stringValue = AssetDatabase.GetAssetPath(sceneSelected);
+                        so.ApplyModifiedProperties();
+                    }
             }
 
         }
@@ -161,7 +185,7 @@ namespace lugu.SceneLoader
             string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
             
             SceneLoaderData data = new SceneLoaderData();
-            data.scenePaths = new string[scenes.Count];
+            data.scenePaths = new string[scenes.Length];
 
             for (int i = 0; i < propScenePaths.arraySize; i++)
             {
