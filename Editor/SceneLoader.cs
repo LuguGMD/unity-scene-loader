@@ -30,15 +30,12 @@ namespace lugu.SceneLoader
 
         private void OnEnable()
         {
-            if (!Application.isPlaying)
-            {
-                so = new SerializedObject(this);
-                propScenes = so.FindProperty("scenes");
-                propSceneSelected = so.FindProperty("sceneSelected");
-                propScenePaths = so.FindProperty("scenePaths");
+            so = new SerializedObject(this);
+            propScenes = so.FindProperty("scenes");
+            propSceneSelected = so.FindProperty("sceneSelected");
+            propScenePaths = so.FindProperty("scenePaths");
 
-                Load();
-            }
+            Load();
         }
 
         private void OnDisable()
@@ -154,32 +151,34 @@ namespace lugu.SceneLoader
 
         public void Load()
         {
-            string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
-
-            if (File.Exists(path))
+            if (propScenes.arraySize == 0)
             {
-                string json = File.ReadAllText(path);
-                SceneLoaderData data = JsonUtility.FromJson<SceneLoaderData>(json);
+                string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
 
-                if(data.scenePaths != null)
-                    for (int i = 0; i < data.scenePaths.Length; i++)
-                    {
-                        SceneAsset sceneToAdd = AssetDatabase.LoadAssetAtPath(data.scenePaths[i], typeof(SceneAsset)) as SceneAsset;
-                        so.Update();
-                        propScenes.InsertArrayElementAtIndex(i);
-                        SerializedProperty pScene = propScenes.GetArrayElementAtIndex(i);
-                        pScene.objectReferenceValue = sceneToAdd;
+                if (File.Exists(path))
+                {
+                    string json = File.ReadAllText(path);
+                    SceneLoaderData data = JsonUtility.FromJson<SceneLoaderData>(json);
 
-                        so.ApplyModifiedProperties();
+                    if (data.scenePaths != null)
+                        for (int i = 0; i < data.scenePaths.Length; i++)
+                        {
+                            SceneAsset sceneToAdd = AssetDatabase.LoadAssetAtPath(data.scenePaths[i], typeof(SceneAsset)) as SceneAsset;
+                            so.Update();
+                            propScenes.InsertArrayElementAtIndex(i);
+                            SerializedProperty pScene = propScenes.GetArrayElementAtIndex(i);
+                            pScene.objectReferenceValue = sceneToAdd;
 
-                        so.Update();
-                        propScenePaths.InsertArrayElementAtIndex(i);
-                        SerializedProperty propPath = propScenePaths.GetArrayElementAtIndex(i);
-                        propPath.stringValue = AssetDatabase.GetAssetPath(sceneSelected);
-                        so.ApplyModifiedProperties();
-                    }
+                            so.ApplyModifiedProperties();
+
+                            so.Update();
+                            propScenePaths.InsertArrayElementAtIndex(i);
+                            SerializedProperty propPath = propScenePaths.GetArrayElementAtIndex(i);
+                            propPath.stringValue = AssetDatabase.GetAssetPath(sceneSelected);
+                            so.ApplyModifiedProperties();
+                        }
+                }
             }
-
         }
         
 
