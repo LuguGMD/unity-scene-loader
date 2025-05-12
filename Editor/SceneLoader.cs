@@ -184,17 +184,20 @@ namespace lugu.SceneLoader
 
         public void Save()
         {
-            string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
-            
-            SceneLoaderData data = new SceneLoaderData();
-            data.scenePaths = new string[scenes.Length];
-
-            for (int i = 0; i < propScenePaths.arraySize; i++)
+            if (!Application.isPlaying)
             {
-                data.scenePaths[i] = propScenePaths.GetArrayElementAtIndex(i).stringValue;
+                string path = Application.persistentDataPath + "/lugu_scene_loader_save.json";
+
+                SceneLoaderData data = new SceneLoaderData();
+                data.scenePaths = new string[scenes.Length];
+
+                for (int i = 0; i < propScenePaths.arraySize; i++)
+                {
+                    data.scenePaths[i] = propScenePaths.GetArrayElementAtIndex(i).stringValue;
+                }
+
+                File.WriteAllText(path, JsonUtility.ToJson(data));
             }
-            
-            File.WriteAllText(path, JsonUtility.ToJson(data));
         }
     }
 }
