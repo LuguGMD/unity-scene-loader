@@ -30,12 +30,15 @@ namespace lugu.SceneLoader
 
         private void OnEnable()
         {
-            so = new SerializedObject(this);
-            propScenes = so.FindProperty("scenes");
-            propSceneSelected = so.FindProperty("sceneSelected");
-            propScenePaths = so.FindProperty("scenePaths");
+            if (!Application.isPlaying)
+            {
+                so = new SerializedObject(this);
+                propScenes = so.FindProperty("scenes");
+                propSceneSelected = so.FindProperty("sceneSelected");
+                propScenePaths = so.FindProperty("scenePaths");
 
-            Load();
+                Load();
+            }
         }
 
         private void OnDisable()
