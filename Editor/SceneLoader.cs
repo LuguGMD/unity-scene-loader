@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace lugu.SceneLoader
 {
@@ -144,9 +145,16 @@ namespace lugu.SceneLoader
 
         public void LoadScene(int index)
         {
-            string scenePath = AssetDatabase.GetAssetPath(scenes[index]);
-            
-            EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            if (Application.isPlaying)
+            {
+                string scenePath = AssetDatabase.GetAssetPath(scenes[index]);
+
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            }
+            else
+            {
+                SceneManager.LoadScene(scenes[index].name);
+            }
         }
 
         public void Load()
