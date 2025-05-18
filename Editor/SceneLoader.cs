@@ -145,7 +145,7 @@ namespace lugu.SceneLoader
 
         public void LoadScene(int index)
         {
-            if (Application.isPlaying)
+            if (!Application.isPlaying)
             {
                 string scenePath = AssetDatabase.GetAssetPath(scenes[index]);
 
